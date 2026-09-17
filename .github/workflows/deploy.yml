@@ -1,0 +1,39 @@
+name: 部署赛博木鱼到 GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:        # 支持在 Actions 页面手动点按钮触发
+
+# GITHUB_TOKEN 需要这三个权限才能发布 Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只允许一个部署在跑；不取消进行中的发布，避免线上出现半成品
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v6
+
+      - name: 打包站点
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: "."
+
+      - name: 发布到 Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
